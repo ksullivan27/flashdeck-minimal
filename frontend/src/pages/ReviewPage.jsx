@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getDeck } from '../lib/api';
@@ -10,10 +10,17 @@ function ReviewPage() {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
+  const nextTimeoutRef = useRef(null);
 
   useEffect(() => {
     loadDeck();
   }, [id]);
+
+  useEffect(() => {
+    return () => {
+      if (nextTimeoutRef.current) clearTimeout(nextTimeoutRef.current);
+    };
+  }, []);
 
   const loadDeck = async () => {
     try {
@@ -39,8 +46,11 @@ function ReviewPage() {
 
   const handleNext = () => {
     if (currentCardIndex < deck.cards.length - 1) {
-      setCurrentCardIndex(currentCardIndex + 1);
+      if (nextTimeoutRef.current) clearTimeout(nextTimeoutRef.current);
       setIsFlipped(false);
+      nextTimeoutRef.current = setTimeout(() => {
+        setCurrentCardIndex(prev => prev + 1);
+      }, 600);
     } else {
       if (window.confirm('You have reviewed all cards! Return to deck?')) {
         navigate(`/decks/${id}`);
