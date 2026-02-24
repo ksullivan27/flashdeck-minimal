@@ -64,14 +64,15 @@ function ReviewPage() {
 
       <div className="flashcard-container">
         <div
+          key={currentCardIndex}
           className={`flashcard ${isFlipped ? 'flipped' : ''}`}
           onClick={handleFlip}
         >
           <div className="flashcard-face flashcard-front">
-            <div className="flashcard-text">{currentCard.question}</div>
+            <div className="flashcard-text" dangerouslySetInnerHTML={{ __html: currentCard.question }} />
           </div>
           <div className="flashcard-face flashcard-back">
-            <div className="flashcard-text">{currentCard.answer}</div>
+            <div className="flashcard-text" dangerouslySetInnerHTML={{ __html: currentCard.answer }} />
           </div>
         </div>
       </div>
