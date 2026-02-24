@@ -44,3 +44,6 @@ frontend/build/
 # Logs
 logs/
 *.log
+
+# Claude Code
+.claude/
