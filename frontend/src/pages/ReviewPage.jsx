@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getDeck } from '../lib/api';
@@ -37,7 +37,7 @@ function ReviewPage() {
     setIsFlipped(!isFlipped);
   };
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentCardIndex < deck.cards.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
       setIsFlipped(false);
@@ -46,7 +46,7 @@ function ReviewPage() {
         navigate(`/decks/${id}`);
       }
     }
-  };
+  }, []);
 
   if (loading) return <Layout><p>Loading...</p></Layout>;
   if (!deck || deck.cards.length === 0) return <Layout><p>No cards to review</p></Layout>;
@@ -64,6 +64,7 @@ function ReviewPage() {
 
       <div className="flashcard-container">
         <div
+          key={currentCardIndex}
           className={`flashcard ${isFlipped ? 'flipped' : ''}`}
           onClick={handleFlip}
         >
