@@ -64,6 +64,7 @@ function ReviewPage() {
 
       <div className="flashcard-container">
         <div
+          key={`${currentCardIndex}-${isFlipped}`}
           className={`flashcard ${isFlipped ? 'flipped' : ''}`}
           onClick={handleFlip}
         >
