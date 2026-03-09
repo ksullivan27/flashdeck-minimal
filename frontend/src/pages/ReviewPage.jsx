@@ -134,9 +134,18 @@ function ReviewPage() {
       </div>
 
       {showDeleteConfirm && (
-        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">Delete Card</div>
+        <div className="modal-overlay">
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-card-title"
+            tabIndex={-1}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setShowDeleteConfirm(false);
+            }}
+          >
+            <div id="delete-card-title" className="modal-header">Delete Card</div>
             <p>Are you sure you want to delete this card? This action cannot be undone.</p>
             <div className="modal-footer">
               <button
