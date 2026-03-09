@@ -54,7 +54,7 @@ function ReviewPage() {
   }, [id, starredOnly, navigate]);
 
   const handleFlip = () => {
-    setIsFlipped(!isFlipped);
+    setIsFlipped((prev) => !prev);
   };
 
   const handlePrevious = useCallback(() => {
@@ -249,7 +249,7 @@ function ReviewPage() {
         <p className="text-secondary mb-1">
           {isFlipped ? 'Click card to show question' : 'Click card to reveal answer'}
           {' · '}
-          <span className="keyboard-hint">Space to flip · ← → to navigate</span>
+          <span className="keyboard-hint">Space to flip · ← → or N/P to navigate</span>
         </p>
         <div className="review-nav-buttons">
           <button
