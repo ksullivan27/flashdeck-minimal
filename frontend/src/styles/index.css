@@ -563,6 +563,12 @@ body {
   opacity: 0.7;
 }
 
+@media (hover: none) and (pointer: coarse) {
+  .keyboard-hint {
+    display: none;
+  }
+}
+
 /* Review Navigation Buttons */
 .review-nav-buttons {
   display: flex;
