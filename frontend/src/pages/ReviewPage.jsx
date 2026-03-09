@@ -80,6 +80,7 @@ function ReviewPage() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (e.repeat) return;
       const tag = e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || tag === 'A') return;
       if (showDeleteConfirm) return;
