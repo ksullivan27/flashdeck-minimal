@@ -558,6 +558,13 @@ body {
   color: var(--text-primary);
 }
 
+/* Review Navigation Buttons */
+.review-nav-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;

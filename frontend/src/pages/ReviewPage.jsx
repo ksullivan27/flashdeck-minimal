@@ -50,6 +50,13 @@ function ReviewPage() {
     setIsFlipped(!isFlipped);
   };
 
+  const handlePrevious = () => {
+    if (currentCardIndex > 0) {
+      setCurrentCardIndex(currentCardIndex - 1);
+      setIsFlipped(false);
+    }
+  };
+
   const handleNext = () => {
     if (currentCardIndex < deck.cards.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
@@ -196,12 +203,21 @@ function ReviewPage() {
         <p className="text-secondary mb-1">
           {isFlipped ? 'Click card to show question' : 'Click card to reveal answer'}
         </p>
-        <button
-          className="btn btn-primary btn-large"
-          onClick={handleNext}
-        >
-          {currentCardIndex < deck.cards.length - 1 ? 'Next Card' : 'Finish Review'}
-        </button>
+        <div className="review-nav-buttons">
+          <button
+            className="btn btn-secondary btn-large"
+            onClick={handlePrevious}
+            disabled={currentCardIndex === 0}
+          >
+            Previous Card
+          </button>
+          <button
+            className="btn btn-primary btn-large"
+            onClick={handleNext}
+          >
+            {currentCardIndex < deck.cards.length - 1 ? 'Next Card' : 'Finish Review'}
+          </button>
+        </div>
       </div>
 
       {showDeleteConfirm && (
