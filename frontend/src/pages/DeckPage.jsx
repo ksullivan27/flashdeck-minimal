@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { StarIcon as StarOutline } from '@heroicons/react/24/outline';
+import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
 import Layout from '../components/Layout';
 import {
   getDeck,
@@ -8,6 +10,7 @@ import {
   createCard,
   updateCard,
   deleteCard,
+  toggleStarCard,
 } from '../lib/api';
 
 function DeckPage() {
@@ -21,6 +24,7 @@ function DeckPage() {
   const [editingCard, setEditingCard] = useState(null);
   const [deckFormData, setDeckFormData] = useState({ name: '', description: '' });
   const [cardFormData, setCardFormData] = useState({ question: '', answer: '' });
+  const [starredFilter, setStarredFilter] = useState(false);
 
   useEffect(() => {
     loadDeck();
@@ -112,8 +116,25 @@ function DeckPage() {
     setShowEditCardModal(true);
   };
 
+  const handleToggleStar = async (cardId) => {
+    try {
+      const response = await toggleStarCard(cardId);
+      const updatedCards = deck.cards.map((c) =>
+        c.id === cardId ? { ...c, starred: response.data.starred } : c
+      );
+      setDeck({ ...deck, cards: updatedCards });
+    } catch (error) {
+      console.error('Error toggling star:', error);
+    }
+  };
+
   if (loading) return <Layout><p>Loading...</p></Layout>;
   if (!deck) return <Layout><p>Deck not found</p></Layout>;
+
+  const starredCount = deck.cards.filter((c) => c.starred).length;
+  const displayedCards = starredFilter
+    ? deck.cards.filter((c) => c.starred)
+    : deck.cards;
 
   return (
     <Layout>
@@ -140,6 +161,14 @@ function DeckPage() {
             Start Review
           </button>
           <button
+            type="button"
+            className="btn btn-star btn-small"
+            onClick={() => navigate(`/decks/${id}/review?starred=true`)}
+            disabled={starredCount === 0}
+          >
+            Review Starred ({starredCount})
+          </button>
+          <button
             className="btn btn-danger btn-small"
             onClick={handleDeleteDeck}
           >
@@ -152,14 +181,36 @@ function DeckPage() {
         <p className="deck-description mb-2">{deck.description}</p>
       )}
 
-      <h2 className="section-title mb-1">Cards ({deck.cards.length})</h2>
+      <div className="section-header">
+        <h2 className="section-title">Cards ({deck.cards.length})</h2>
+        <button
+          type="button"
+          className={`btn btn-small ${starredFilter ? 'btn-star' : 'btn-secondary'}`}
+          onClick={() => setStarredFilter(!starredFilter)}
+          disabled={starredCount === 0}
+        >
+          {starredFilter ? `Starred (${starredCount})` : `Show Starred (${starredCount})`}
+        </button>
+      </div>
 
-      {deck.cards.length > 0 ? (
+      {displayedCards.length > 0 ? (
         <div className="grid grid-4">
-          {deck.cards.map((card) => (
-            <div key={card.id} className="card">
-              <div className="mb-1">
-                <strong>Q:</strong> {card.question}
+          {displayedCards.map((card) => (
+            <div key={card.id} className={`card${card.starred ? ' card-starred' : ''}`}>
+              <div className="card-header-row">
+                <div className="mb-1">
+                  <strong>Q:</strong> {card.question}
+                </div>
+                <button
+                  type="button"
+                  className={`star-toggle-btn${card.starred ? ' starred' : ''}`}
+                  onClick={() => handleToggleStar(card.id)}
+                  aria-label={card.starred ? 'Unstar card' : 'Star card'}
+                >
+                  {card.starred
+                    ? <StarSolid width={18} height={18} />
+                    : <StarOutline width={18} height={18} />}
+                </button>
               </div>
               <div className="action-buttons">
                 <button

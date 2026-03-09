@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.db.session import get_db
 from app.models import Deck, Card
 from app.schemas import (
@@ -130,3 +130,33 @@ def delete_card(card_id: int, db: Session = Depends(get_db)):
     db.delete(db_card)
     db.commit()
     return None
+
+
+@router.patch("/cards/{card_id}/star", response_model=CardResponse)
+def toggle_star_card(card_id: int, db: Session = Depends(get_db)):
+    """Toggle the starred status of a card"""
+    db_card = db.query(Card).filter(Card.id == card_id).first()
+    if not db_card:
+        raise HTTPException(status_code=404, detail="Card not found")
+
+    db_card.starred = not db_card.starred
+    db.commit()
+    db.refresh(db_card)
+    return db_card
+
+
+@router.get("/decks/{deck_id}/cards", response_model=List[CardResponse])
+def list_deck_cards(
+    deck_id: int,
+    starred: Optional[bool] = Query(None),
+    db: Session = Depends(get_db),
+):
+    """List cards in a deck, optionally filtered by starred status"""
+    deck = db.query(Deck).filter(Deck.id == deck_id).first()
+    if not deck:
+        raise HTTPException(status_code=404, detail="Deck not found")
+
+    query = db.query(Card).filter(Card.deck_id == deck_id)
+    if starred is not None:
+        query = query.filter(Card.starred == starred)
+    return query.all()

@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { TrashIcon, StarIcon as StarOutline } from '@heroicons/react/24/outline';
+import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
 import Layout from '../components/Layout';
-import { getDeck, deleteCard } from '../lib/api';
+import { getDeck, deleteCard, toggleStarCard } from '../lib/api';
 
 function ReviewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const starredOnly = searchParams.get('starred') === 'true';
   const [deck, setDeck] = useState(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -23,12 +26,15 @@ function ReviewPage() {
   const loadDeck = async () => {
     try {
       const response = await getDeck(id);
-      if (response.data.cards.length === 0) {
-        alert('This deck has no cards to review');
+      const cards = starredOnly
+        ? response.data.cards.filter((c) => c.starred)
+        : response.data.cards;
+      if (cards.length === 0) {
+        alert(starredOnly ? 'No starred cards to review' : 'This deck has no cards to review');
         navigate(`/decks/${id}`);
         return;
       }
-      setDeck(response.data);
+      setDeck({ ...response.data, cards });
     } catch (error) {
       console.error('Error loading deck:', error);
       alert('Failed to load deck');
@@ -50,6 +56,32 @@ function ReviewPage() {
       if (window.confirm('You have reviewed all cards! Return to deck?')) {
         navigate(`/decks/${id}`);
       }
+    }
+  };
+
+  const handleToggleStar = async (e) => {
+    e.stopPropagation();
+    try {
+      const response = await toggleStarCard(currentCard.id);
+      if (starredOnly && !response.data.starred) {
+        const updatedCards = deck.cards.filter((c) => c.id !== currentCard.id);
+        if (updatedCards.length === 0) {
+          navigate(`/decks/${id}`);
+          return;
+        }
+        setDeck({ ...deck, cards: updatedCards });
+        if (currentCardIndex >= updatedCards.length) {
+          setCurrentCardIndex(updatedCards.length - 1);
+        }
+        setIsFlipped(false);
+      } else {
+        const updatedCards = deck.cards.map((c) =>
+          c.id === currentCard.id ? { ...c, starred: response.data.starred } : c
+        );
+        setDeck({ ...deck, cards: updatedCards });
+      }
+    } catch (error) {
+      console.error('Error toggling star:', error);
     }
   };
 
@@ -95,6 +127,7 @@ function ReviewPage() {
     <Layout>
       <div className="text-center mb-2">
         <h1 className="page-title">{deck.name}</h1>
+        {starredOnly && <p className="starred-badge">Reviewing Starred Cards</p>}
         <p className="text-secondary">
           Card {currentCardIndex + 1} of {deck.cards.length}
         </p>
@@ -109,6 +142,16 @@ function ReviewPage() {
           <div className="flashcard-face flashcard-front">
             <button
               type="button"
+              className={`flashcard-star-btn${currentCard.starred ? ' starred' : ''}`}
+              onClick={handleToggleStar}
+              aria-label={currentCard.starred ? 'Unstar card' : 'Star card'}
+            >
+              {currentCard.starred
+                ? <StarSolid width={20} height={20} />
+                : <StarOutline width={20} height={20} />}
+            </button>
+            <button
+              type="button"
               className="flashcard-delete-btn"
               onClick={handleDeleteClick}
               aria-label="Delete card"
@@ -118,6 +161,16 @@ function ReviewPage() {
             <div className="flashcard-text">{currentCard.question}</div>
           </div>
           <div className="flashcard-face flashcard-back">
+            <button
+              type="button"
+              className={`flashcard-star-btn${currentCard.starred ? ' starred' : ''}`}
+              onClick={handleToggleStar}
+              aria-label={currentCard.starred ? 'Unstar card' : 'Star card'}
+            >
+              {currentCard.starred
+                ? <StarSolid width={20} height={20} />
+                : <StarOutline width={20} height={20} />}
+            </button>
             <button
               type="button"
               className="flashcard-delete-btn"

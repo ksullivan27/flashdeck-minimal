@@ -19,5 +19,10 @@ export const getCard = (id) => api.get(`/cards/${id}`);
 export const createCard = (deckId, data) => api.post(`/decks/${deckId}/cards`, data);
 export const updateCard = (id, data) => api.put(`/cards/${id}`, data);
 export const deleteCard = (id) => api.delete(`/cards/${id}`);
+export const toggleStarCard = (id) => api.patch(`/cards/${id}/star`);
+export const getDeckCards = (deckId, { starred } = {}) => {
+  const params = starred != null ? { starred } : {};
+  return api.get(`/decks/${deckId}/cards`, { params });
+};
 
 export default api;

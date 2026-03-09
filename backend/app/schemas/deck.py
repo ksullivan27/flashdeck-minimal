@@ -19,6 +19,7 @@ class CardUpdate(CardBase):
 class CardResponse(CardBase):
     id: int
     deck_id: int
+    starred: bool = False
     created_at: datetime
     updated_at: datetime
 
