@@ -64,7 +64,7 @@ function ReviewPage() {
         return;
       }
       setDeck({ ...deck, cards: updatedCards });
-      if (currentCardIndex > updatedCards.length) {
+      if (currentCardIndex >= updatedCards.length) {
         setCurrentCardIndex(updatedCards.length - 1);
       }
       setIsFlipped(false);
