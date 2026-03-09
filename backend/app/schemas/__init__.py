@@ -6,6 +6,7 @@ from app.schemas.deck import (
     CardCreate,
     CardUpdate,
     CardResponse,
+    StarUpdate,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "CardCreate",
     "CardUpdate",
     "CardResponse",
+    "StarUpdate",
 ]

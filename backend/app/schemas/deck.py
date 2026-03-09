@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime
 
 
@@ -16,9 +16,14 @@ class CardUpdate(CardBase):
     pass
 
 
+class StarUpdate(BaseModel):
+    starred: bool
+
+
 class CardResponse(CardBase):
     id: int
     deck_id: int
+    starred: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -43,7 +48,7 @@ class DeckResponse(DeckBase):
     id: int
     created_at: datetime
     updated_at: datetime
-    cards: List[CardResponse] = []
+    cards: list[CardResponse] = []
 
     class Config:
         from_attributes = True
