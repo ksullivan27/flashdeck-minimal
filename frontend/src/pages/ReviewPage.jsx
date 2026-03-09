@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { TrashIcon, StarIcon as StarOutline } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
@@ -18,55 +18,100 @@ function ReviewPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
-
-  const loadDeck = useCallback(async () => {
-    try {
-      const response = await getDeck(id);
-      const cards = starredOnly
-        ? response.data.cards.filter((c) => c.starred)
-        : response.data.cards;
-      if (cards.length === 0) {
-        alert(starredOnly ? 'No starred cards to review' : 'This deck has no cards to review');
-        navigate(`/decks/${id}`);
-        return;
-      }
-      setDeck({ ...response.data, cards });
-    } catch (error) {
-      console.error('Error loading deck:', error);
-      alert('Failed to load deck');
-      navigate('/decks');
-    } finally {
-      setLoading(false);
-    }
-  }, [id, starredOnly, navigate]);
+  const cardIndexRef = useRef(0);
 
   useEffect(() => {
+    let active = true;
+    cardIndexRef.current = 0;
     setCurrentCardIndex(0);
     setIsFlipped(false);
-    loadDeck();
-  }, [loadDeck]);
+    setLoading(true);
 
-  const handleFlip = () => {
-    setIsFlipped(!isFlipped);
-  };
+    (async () => {
+      try {
+        const response = await getDeck(id);
+        if (!active) return;
+        const cards = starredOnly
+          ? response.data.cards.filter((c) => c.starred)
+          : response.data.cards;
+        if (cards.length === 0) {
+          alert(starredOnly ? 'No starred cards to review' : 'This deck has no cards to review');
+          navigate(`/decks/${id}`);
+          return;
+        }
+        setDeck({ ...response.data, cards });
+      } catch (error) {
+        if (!active) return;
+        console.error('Error loading deck:', error);
+        alert('Failed to load deck');
+        navigate('/decks');
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
 
-  const handlePrevious = () => {
-    if (currentCardIndex > 0) {
-      setCurrentCardIndex(currentCardIndex - 1);
+    return () => { active = false; };
+  }, [id, starredOnly, navigate]);
+
+  const handleFlip = useCallback(() => {
+    setIsFlipped((prev) => !prev);
+  }, []);
+
+  const handlePrevious = useCallback(() => {
+    if (cardIndexRef.current > 0) {
+      cardIndexRef.current -= 1;
+      setCurrentCardIndex(cardIndexRef.current);
       setIsFlipped(false);
     }
-  };
+  }, []);
 
-  const handleNext = () => {
-    if (currentCardIndex < deck.cards.length - 1) {
-      setCurrentCardIndex(currentCardIndex + 1);
+  const handleNext = useCallback(() => {
+    if (!deck) return;
+    if (cardIndexRef.current < deck.cards.length - 1) {
+      cardIndexRef.current += 1;
+      setCurrentCardIndex(cardIndexRef.current);
       setIsFlipped(false);
     } else {
       if (window.confirm('You have reviewed all cards! Return to deck?')) {
         navigate(`/decks/${id}`);
       }
     }
-  };
+  }, [deck, navigate, id]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.repeat) return;
+      const tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || tag === 'A') return;
+      if (showDeleteConfirm) return;
+      if (!deck || deck.cards.length === 0) return;
+
+      switch (e.key) {
+        case ' ':
+        case 'Enter':
+          e.preventDefault();
+          setIsFlipped((prev) => !prev);
+          break;
+        case 'ArrowRight':
+        case 'n':
+        case 'N':
+          e.preventDefault();
+          handleNext();
+          break;
+        case 'ArrowLeft':
+        case 'p':
+        case 'P':
+          e.preventDefault();
+          handlePrevious();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [deck, showDeleteConfirm, handleNext, handlePrevious]);
 
   const handleToggleStar = async (e) => {
     e.stopPropagation();
@@ -82,9 +127,10 @@ function ReviewPage() {
           return;
         }
         setDeck((prev) => ({ ...prev, cards: updatedCards }));
-        setCurrentCardIndex((prev) =>
-          prev >= updatedCards.length ? updatedCards.length - 1 : prev
-        );
+        if (cardIndexRef.current >= updatedCards.length) {
+          cardIndexRef.current = updatedCards.length - 1;
+        }
+        setCurrentCardIndex(cardIndexRef.current);
         setIsFlipped(false);
       } else {
         setDeck((prev) => ({
@@ -117,10 +163,11 @@ function ReviewPage() {
         navigate(`/decks/${id}`);
         return;
       }
-      setDeck({ ...deck, cards: updatedCards });
-      if (currentCardIndex >= updatedCards.length) {
-        setCurrentCardIndex(updatedCards.length - 1);
+      setDeck((prev) => ({ ...prev, cards: updatedCards }));
+      if (cardIndexRef.current >= updatedCards.length) {
+        cardIndexRef.current = updatedCards.length - 1;
       }
+      setCurrentCardIndex(cardIndexRef.current);
       setIsFlipped(false);
     } catch (error) {
       console.error('Error deleting card:', error);
@@ -202,6 +249,7 @@ function ReviewPage() {
       <div className="text-center mt-2">
         <p className="text-secondary mb-1">
           {isFlipped ? 'Click card to show question' : 'Click card to reveal answer'}
+          <span className="keyboard-hint"> · Space to flip · ← → or N/P to navigate</span>
         </p>
         <div className="review-nav-buttons">
           <button
