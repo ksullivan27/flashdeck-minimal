@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { TrashIcon, StarIcon as StarOutline } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
@@ -18,9 +18,11 @@ function ReviewPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
+  const cardIndexRef = useRef(0);
 
   useEffect(() => {
     let active = true;
+    cardIndexRef.current = 0;
     setCurrentCardIndex(0);
     setIsFlipped(false);
     setLoading(true);
@@ -56,39 +58,30 @@ function ReviewPage() {
   };
 
   const handlePrevious = useCallback(() => {
-    setCurrentCardIndex((prev) => {
-      if (prev > 0) {
-        setIsFlipped(false);
-        return prev - 1;
-      }
-      return prev;
-    });
+    if (cardIndexRef.current > 0) {
+      cardIndexRef.current -= 1;
+      setCurrentCardIndex(cardIndexRef.current);
+      setIsFlipped(false);
+    }
   }, []);
 
   const handleNext = useCallback(() => {
     if (!deck) return;
-    setCurrentCardIndex((prev) => {
-      if (prev < deck.cards.length - 1) {
-        setIsFlipped(false);
-        return prev + 1;
+    if (cardIndexRef.current < deck.cards.length - 1) {
+      cardIndexRef.current += 1;
+      setCurrentCardIndex(cardIndexRef.current);
+      setIsFlipped(false);
+    } else {
+      if (window.confirm('You have reviewed all cards! Return to deck?')) {
+        navigate(`/decks/${id}`);
       }
-      // Prompt after the state flush, not inside the updater
-      return prev;
-    });
-    setCurrentCardIndex((prev) => {
-      if (prev === deck.cards.length - 1) {
-        if (window.confirm('You have reviewed all cards! Return to deck?')) {
-          navigate(`/decks/${id}`);
-        }
-      }
-      return prev;
-    });
+    }
   }, [deck, navigate, id]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       const tag = e.target.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || tag === 'A') return;
       if (showDeleteConfirm) return;
       if (!deck || deck.cards.length === 0) return;
 
@@ -133,9 +126,10 @@ function ReviewPage() {
           return;
         }
         setDeck((prev) => ({ ...prev, cards: updatedCards }));
-        setCurrentCardIndex((prev) =>
-          prev >= updatedCards.length ? updatedCards.length - 1 : prev
-        );
+        if (cardIndexRef.current >= updatedCards.length) {
+          cardIndexRef.current = updatedCards.length - 1;
+        }
+        setCurrentCardIndex(cardIndexRef.current);
         setIsFlipped(false);
       } else {
         setDeck((prev) => ({
@@ -169,9 +163,10 @@ function ReviewPage() {
         return;
       }
       setDeck((prev) => ({ ...prev, cards: updatedCards }));
-      if (currentCardIndex >= updatedCards.length) {
-        setCurrentCardIndex(updatedCards.length - 1);
+      if (cardIndexRef.current >= updatedCards.length) {
+        cardIndexRef.current = updatedCards.length - 1;
       }
+      setCurrentCardIndex(cardIndexRef.current);
       setIsFlipped(false);
     } catch (error) {
       console.error('Error deleting card:', error);
