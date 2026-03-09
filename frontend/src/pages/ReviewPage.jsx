@@ -19,32 +19,37 @@ function ReviewPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
 
-  const loadDeck = useCallback(async () => {
-    try {
-      const response = await getDeck(id);
-      const cards = starredOnly
-        ? response.data.cards.filter((c) => c.starred)
-        : response.data.cards;
-      if (cards.length === 0) {
-        alert(starredOnly ? 'No starred cards to review' : 'This deck has no cards to review');
-        navigate(`/decks/${id}`);
-        return;
-      }
-      setDeck({ ...response.data, cards });
-    } catch (error) {
-      console.error('Error loading deck:', error);
-      alert('Failed to load deck');
-      navigate('/decks');
-    } finally {
-      setLoading(false);
-    }
-  }, [id, starredOnly, navigate]);
-
   useEffect(() => {
+    let active = true;
     setCurrentCardIndex(0);
     setIsFlipped(false);
-    loadDeck();
-  }, [loadDeck]);
+    setLoading(true);
+
+    (async () => {
+      try {
+        const response = await getDeck(id);
+        if (!active) return;
+        const cards = starredOnly
+          ? response.data.cards.filter((c) => c.starred)
+          : response.data.cards;
+        if (cards.length === 0) {
+          alert(starredOnly ? 'No starred cards to review' : 'This deck has no cards to review');
+          navigate(`/decks/${id}`);
+          return;
+        }
+        setDeck({ ...response.data, cards });
+      } catch (error) {
+        if (!active) return;
+        console.error('Error loading deck:', error);
+        alert('Failed to load deck');
+        navigate('/decks');
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+
+    return () => { active = false; };
+  }, [id, starredOnly, navigate]);
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
@@ -163,7 +168,7 @@ function ReviewPage() {
         navigate(`/decks/${id}`);
         return;
       }
-      setDeck({ ...deck, cards: updatedCards });
+      setDeck((prev) => ({ ...prev, cards: updatedCards }));
       if (currentCardIndex >= updatedCards.length) {
         setCurrentCardIndex(updatedCards.length - 1);
       }
