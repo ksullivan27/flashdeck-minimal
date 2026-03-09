@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { TrashIcon, StarIcon as StarOutline } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
@@ -19,13 +19,7 @@ function ReviewPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
 
-  useEffect(() => {
-    setCurrentCardIndex(0);
-    setIsFlipped(false);
-    loadDeck();
-  }, [id, starredOnly]);
-
-  const loadDeck = async () => {
+  const loadDeck = useCallback(async () => {
     try {
       const response = await getDeck(id);
       const cards = starredOnly
@@ -44,7 +38,13 @@ function ReviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, starredOnly, navigate]);
+
+  useEffect(() => {
+    setCurrentCardIndex(0);
+    setIsFlipped(false);
+    loadDeck();
+  }, [loadDeck]);
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
