@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import Layout from '../components/Layout';
-import { getDeck } from '../lib/api';
+import { getDeck, deleteCard } from '../lib/api';
 
 function ReviewPage() {
   const { id } = useParams();
@@ -10,6 +11,7 @@ function ReviewPage() {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     loadDeck();
@@ -48,6 +50,32 @@ function ReviewPage() {
     }
   };
 
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteCard(currentCard.id);
+      const updatedCards = deck.cards.filter((_, i) => i !== currentCardIndex);
+      if (updatedCards.length === 0) {
+        navigate(`/decks/${id}`);
+        return;
+      }
+      setDeck({ ...deck, cards: updatedCards });
+      if (currentCardIndex > updatedCards.length) {
+        setCurrentCardIndex(updatedCards.length - 1);
+      }
+      setIsFlipped(false);
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      alert('Failed to delete card');
+    } finally {
+      setShowDeleteConfirm(false);
+    }
+  };
+
   if (loading) return <Layout><p>Loading...</p></Layout>;
   if (!deck || deck.cards.length === 0) return <Layout><p>No cards to review</p></Layout>;
 
@@ -69,9 +97,25 @@ function ReviewPage() {
           onClick={handleFlip}
         >
           <div className="flashcard-face flashcard-front">
+            <button
+              type="button"
+              className="flashcard-delete-btn"
+              onClick={handleDeleteClick}
+              title="Delete card"
+            >
+              <TrashIcon width={18} height={18} />
+            </button>
             <div className="flashcard-text">{currentCard.question}</div>
           </div>
           <div className="flashcard-face flashcard-back">
+            <button
+              type="button"
+              className="flashcard-delete-btn"
+              onClick={handleDeleteClick}
+              title="Delete card"
+            >
+              <TrashIcon width={18} height={18} />
+            </button>
             <div className="flashcard-text">{currentCard.answer}</div>
           </div>
         </div>
@@ -88,6 +132,31 @@ function ReviewPage() {
           {currentCardIndex < deck.cards.length - 1 ? 'Next Card' : 'Finish Review'}
         </button>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">Delete Card</div>
+            <p>Are you sure you want to delete this card? This action cannot be undone.</p>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleDeleteConfirm}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
