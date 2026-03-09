@@ -13,6 +13,8 @@ function ReviewPage() {
   const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
 
   useEffect(() => {
     loadDeck();
@@ -53,6 +55,8 @@ function ReviewPage() {
 
   const handleDeleteClick = (e) => {
     e.stopPropagation();
+    setPendingDeleteId(currentCard.id);
+    setPendingDeleteIndex(currentCardIndex);
     setShowDeleteConfirm(true);
   };
 
@@ -60,8 +64,8 @@ function ReviewPage() {
     if (isDeleting) return;
     setIsDeleting(true);
     try {
-      await deleteCard(currentCard.id);
-      const updatedCards = deck.cards.filter((_, i) => i !== currentCardIndex);
+      await deleteCard(pendingDeleteId);
+      const updatedCards = deck.cards.filter((_, i) => i !== pendingDeleteIndex);
       if (updatedCards.length === 0) {
         navigate(`/decks/${id}`);
         return;
@@ -77,6 +81,8 @@ function ReviewPage() {
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
+      setPendingDeleteId(null);
+      setPendingDeleteIndex(null);
     }
   };
 
@@ -146,7 +152,11 @@ function ReviewPage() {
             aria-labelledby="delete-card-title"
             tabIndex={-1}
             onKeyDown={(e) => {
-              if (e.key === 'Escape') setShowDeleteConfirm(false);
+              if (e.key === 'Escape') {
+                setShowDeleteConfirm(false);
+                setPendingDeleteId(null);
+                setPendingDeleteIndex(null);
+              }
             }}
           >
             <div id="delete-card-title" className="modal-header">Delete Card</div>
@@ -155,7 +165,11 @@ function ReviewPage() {
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => setShowDeleteConfirm(false)}
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setPendingDeleteId(null);
+                  setPendingDeleteIndex(null);
+                }}
                 disabled={isDeleting}
               >
                 Cancel
