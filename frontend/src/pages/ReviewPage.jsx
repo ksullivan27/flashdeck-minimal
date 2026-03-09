@@ -63,28 +63,36 @@ function ReviewPage() {
 
   const handleToggleStar = async (e) => {
     e.stopPropagation();
+    const cardId = currentCard.id;
     const newStarred = !currentCard.starred;
+    const wasStarredOnly = starredOnly;
     try {
-      const response = await setCardStarred(currentCard.id, newStarred);
-      if (starredOnly && !response.data.starred) {
-        const updatedCards = deck.cards.filter((c) => c.id !== currentCard.id);
-        if (updatedCards.length === 0) {
-          navigate(`/decks/${id}`);
-          return;
-        }
-        setDeck({ ...deck, cards: updatedCards });
-        if (currentCardIndex >= updatedCards.length) {
-          setCurrentCardIndex(updatedCards.length - 1);
-        }
+      const response = await setCardStarred(cardId, newStarred);
+      if (wasStarredOnly && !response.data.starred) {
+        setDeck((prev) => {
+          const updatedCards = prev.cards.filter((c) => c.id !== cardId);
+          if (updatedCards.length === 0) {
+            navigate(`/decks/${id}`);
+            return prev;
+          }
+          return { ...prev, cards: updatedCards };
+        });
+        setCurrentCardIndex((prev) => {
+          const remaining = deck.cards.filter((c) => c.id !== cardId).length;
+          return prev >= remaining ? remaining - 1 : prev;
+        });
         setIsFlipped(false);
       } else {
-        const updatedCards = deck.cards.map((c) =>
-          c.id === currentCard.id ? { ...c, starred: response.data.starred } : c
-        );
-        setDeck({ ...deck, cards: updatedCards });
+        setDeck((prev) => ({
+          ...prev,
+          cards: prev.cards.map((c) =>
+            c.id === cardId ? { ...c, starred: response.data.starred } : c
+          ),
+        }));
       }
     } catch (error) {
       console.error('Error toggling star:', error);
+      alert('Failed to update star');
     }
   };
 

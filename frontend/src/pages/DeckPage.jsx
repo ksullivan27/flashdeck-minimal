@@ -118,14 +118,18 @@ function DeckPage() {
 
   const handleToggleStar = async (cardId) => {
     const card = deck.cards.find((c) => c.id === cardId);
+    if (!card) return;
     try {
       const response = await setCardStarred(cardId, !card.starred);
-      const updatedCards = deck.cards.map((c) =>
-        c.id === cardId ? { ...c, starred: response.data.starred } : c
-      );
-      setDeck({ ...deck, cards: updatedCards });
+      setDeck((prev) => ({
+        ...prev,
+        cards: prev.cards.map((c) =>
+          c.id === cardId ? { ...c, starred: response.data.starred } : c
+        ),
+      }));
     } catch (error) {
       console.error('Error toggling star:', error);
+      alert('Failed to update star');
     }
   };
 
