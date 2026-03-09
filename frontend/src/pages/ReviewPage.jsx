@@ -69,18 +69,15 @@ function ReviewPage() {
     try {
       const response = await setCardStarred(cardId, newStarred);
       if (wasStarredOnly && !response.data.starred) {
-        setDeck((prev) => {
-          const updatedCards = prev.cards.filter((c) => c.id !== cardId);
-          if (updatedCards.length === 0) {
-            navigate(`/decks/${id}`);
-            return prev;
-          }
-          return { ...prev, cards: updatedCards };
-        });
-        setCurrentCardIndex((prev) => {
-          const remaining = deck.cards.filter((c) => c.id !== cardId).length;
-          return prev >= remaining ? remaining - 1 : prev;
-        });
+        const updatedCards = deck.cards.filter((c) => c.id !== cardId);
+        if (updatedCards.length === 0) {
+          navigate(`/decks/${id}`);
+          return;
+        }
+        setDeck((prev) => ({ ...prev, cards: updatedCards }));
+        setCurrentCardIndex((prev) =>
+          prev >= updatedCards.length ? updatedCards.length - 1 : prev
+        );
         setIsFlipped(false);
       } else {
         setDeck((prev) => ({
