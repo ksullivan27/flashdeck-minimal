@@ -12,6 +12,7 @@ function ReviewPage() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadDeck();
@@ -56,6 +57,8 @@ function ReviewPage() {
   };
 
   const handleDeleteConfirm = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
     try {
       await deleteCard(currentCard.id);
       const updatedCards = deck.cards.filter((_, i) => i !== currentCardIndex);
@@ -72,6 +75,7 @@ function ReviewPage() {
       console.error('Error deleting card:', error);
       alert('Failed to delete card');
     } finally {
+      setIsDeleting(false);
       setShowDeleteConfirm(false);
     }
   };
@@ -152,6 +156,7 @@ function ReviewPage() {
                 type="button"
                 className="btn btn-secondary"
                 onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
               >
                 Cancel
               </button>
@@ -159,8 +164,9 @@ function ReviewPage() {
                 type="button"
                 className="btn btn-danger"
                 onClick={handleDeleteConfirm}
+                disabled={isDeleting}
               >
-                Delete
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
