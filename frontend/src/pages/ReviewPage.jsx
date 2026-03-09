@@ -105,7 +105,7 @@ function ReviewPage() {
               type="button"
               className="flashcard-delete-btn"
               onClick={handleDeleteClick}
-              title="Delete card"
+              aria-label="Delete card"
             >
               <TrashIcon width={18} height={18} />
             </button>
@@ -116,7 +116,7 @@ function ReviewPage() {
               type="button"
               className="flashcard-delete-btn"
               onClick={handleDeleteClick}
-              title="Delete card"
+              aria-label="Delete card"
             >
               <TrashIcon width={18} height={18} />
             </button>
