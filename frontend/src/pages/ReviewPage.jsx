@@ -62,15 +62,23 @@ function ReviewPage() {
 
   const handleNext = useCallback(() => {
     if (!deck) return;
-    if (currentCardIndex < deck.cards.length - 1) {
-      setCurrentCardIndex(currentCardIndex + 1);
-      setIsFlipped(false);
-    } else {
-      if (window.confirm('You have reviewed all cards! Return to deck?')) {
-        navigate(`/decks/${id}`);
+    setCurrentCardIndex((prev) => {
+      if (prev < deck.cards.length - 1) {
+        setIsFlipped(false);
+        return prev + 1;
       }
-    }
-  }, [deck, currentCardIndex, navigate, id]);
+      // Prompt after the state flush, not inside the updater
+      return prev;
+    });
+    setCurrentCardIndex((prev) => {
+      if (prev === deck.cards.length - 1) {
+        if (window.confirm('You have reviewed all cards! Return to deck?')) {
+          navigate(`/decks/${id}`);
+        }
+      }
+      return prev;
+    });
+  }, [deck, navigate, id]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
