@@ -512,6 +512,13 @@ body {
   color: var(--danger-color);
 }
 
+.flashcard-delete-btn:focus-visible {
+  opacity: 1;
+  color: var(--danger-color);
+  outline: 2px solid var(--danger-color);
+  outline-offset: 2px;
+}
+
 .flashcard-text {
   font-size: 1.5rem;
   text-align: center;
