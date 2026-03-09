@@ -498,7 +498,7 @@ body {
   right: 0.75rem;
   background: none;
   border: none;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0.375rem;
   border-radius: 0.375rem;
