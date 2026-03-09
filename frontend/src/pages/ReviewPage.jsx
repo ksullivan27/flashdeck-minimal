@@ -53,9 +53,9 @@ function ReviewPage() {
     return () => { active = false; };
   }, [id, starredOnly, navigate]);
 
-  const handleFlip = () => {
+  const handleFlip = useCallback(() => {
     setIsFlipped((prev) => !prev);
-  };
+  }, []);
 
   const handlePrevious = useCallback(() => {
     if (cardIndexRef.current > 0) {
