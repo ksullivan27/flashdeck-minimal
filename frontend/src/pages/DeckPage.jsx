@@ -10,7 +10,7 @@ import {
   createCard,
   updateCard,
   deleteCard,
-  toggleStarCard,
+  setCardStarred,
 } from '../lib/api';
 
 function DeckPage() {
@@ -117,8 +117,9 @@ function DeckPage() {
   };
 
   const handleToggleStar = async (cardId) => {
+    const card = deck.cards.find((c) => c.id === cardId);
     try {
-      const response = await toggleStarCard(cardId);
+      const response = await setCardStarred(cardId, !card.starred);
       const updatedCards = deck.cards.map((c) =>
         c.id === cardId ? { ...c, starred: response.data.starred } : c
       );
@@ -231,9 +232,13 @@ function DeckPage() {
         </div>
       ) : (
         <div className="empty-state">
-          <p className="empty-state-title">No cards yet</p>
+          <p className="empty-state-title">
+            {starredFilter ? 'No starred cards' : 'No cards yet'}
+          </p>
           <p className="empty-state-description">
-            Add your first card to start studying!
+            {starredFilter
+              ? 'Star cards during review to save them for later.'
+              : 'Add your first card to start studying!'}
           </p>
         </div>
       )}

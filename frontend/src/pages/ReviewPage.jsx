@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { TrashIcon, StarIcon as StarOutline } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
 import Layout from '../components/Layout';
-import { getDeck, deleteCard, toggleStarCard } from '../lib/api';
+import { getDeck, deleteCard, setCardStarred } from '../lib/api';
 
 function ReviewPage() {
   const { id } = useParams();
@@ -21,7 +21,7 @@ function ReviewPage() {
 
   useEffect(() => {
     loadDeck();
-  }, [id]);
+  }, [id, starredOnly]);
 
   const loadDeck = async () => {
     try {
@@ -61,8 +61,9 @@ function ReviewPage() {
 
   const handleToggleStar = async (e) => {
     e.stopPropagation();
+    const newStarred = !currentCard.starred;
     try {
-      const response = await toggleStarCard(currentCard.id);
+      const response = await setCardStarred(currentCard.id, newStarred);
       if (starredOnly && !response.data.starred) {
         const updatedCards = deck.cards.filter((c) => c.id !== currentCard.id);
         if (updatedCards.length === 0) {

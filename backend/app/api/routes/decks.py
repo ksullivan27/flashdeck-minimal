@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 from app.db.session import get_db
 from app.models import Deck, Card
 from app.schemas import (
@@ -11,6 +11,7 @@ from app.schemas import (
     CardCreate,
     CardUpdate,
     CardResponse,
+    StarUpdate,
 )
 
 router = APIRouter()
@@ -26,7 +27,7 @@ def create_deck(deck: DeckCreate, db: Session = Depends(get_db)):
     return db_deck
 
 
-@router.get("/decks", response_model=List[DeckSummary])
+@router.get("/decks", response_model=list[DeckSummary])
 def list_decks(db: Session = Depends(get_db)):
     """Get all decks with card counts"""
     decks = db.query(Deck).all()
@@ -133,19 +134,19 @@ def delete_card(card_id: int, db: Session = Depends(get_db)):
 
 
 @router.patch("/cards/{card_id}/star", response_model=CardResponse)
-def toggle_star_card(card_id: int, db: Session = Depends(get_db)):
-    """Toggle the starred status of a card"""
+def set_star_card(card_id: int, body: StarUpdate, db: Session = Depends(get_db)):
+    """Set the starred status of a card"""
     db_card = db.query(Card).filter(Card.id == card_id).first()
     if not db_card:
         raise HTTPException(status_code=404, detail="Card not found")
 
-    db_card.starred = not db_card.starred
+    db_card.starred = body.starred
     db.commit()
     db.refresh(db_card)
     return db_card
 
 
-@router.get("/decks/{deck_id}/cards", response_model=List[CardResponse])
+@router.get("/decks/{deck_id}/cards", response_model=list[CardResponse])
 def list_deck_cards(
     deck_id: int,
     starred: Optional[bool] = Query(None),
