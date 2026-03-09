@@ -50,14 +50,18 @@ function ReviewPage() {
     setIsFlipped(!isFlipped);
   };
 
-  const handlePrevious = () => {
-    if (currentCardIndex > 0) {
-      setCurrentCardIndex(currentCardIndex - 1);
-      setIsFlipped(false);
-    }
-  };
+  const handlePrevious = useCallback(() => {
+    setCurrentCardIndex((prev) => {
+      if (prev > 0) {
+        setIsFlipped(false);
+        return prev - 1;
+      }
+      return prev;
+    });
+  }, []);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
+    if (!deck) return;
     if (currentCardIndex < deck.cards.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
       setIsFlipped(false);
@@ -66,7 +70,41 @@ function ReviewPage() {
         navigate(`/decks/${id}`);
       }
     }
-  };
+  }, [deck, currentCardIndex, navigate, id]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (showDeleteConfirm) return;
+      if (!deck || deck.cards.length === 0) return;
+
+      switch (e.key) {
+        case ' ':
+        case 'Enter':
+          e.preventDefault();
+          setIsFlipped((prev) => !prev);
+          break;
+        case 'ArrowRight':
+        case 'n':
+        case 'N':
+          e.preventDefault();
+          handleNext();
+          break;
+        case 'ArrowLeft':
+        case 'p':
+        case 'P':
+          e.preventDefault();
+          handlePrevious();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [deck, showDeleteConfirm, handleNext, handlePrevious]);
 
   const handleToggleStar = async (e) => {
     e.stopPropagation();
@@ -202,6 +240,8 @@ function ReviewPage() {
       <div className="text-center mt-2">
         <p className="text-secondary mb-1">
           {isFlipped ? 'Click card to show question' : 'Click card to reveal answer'}
+          {' · '}
+          <span className="keyboard-hint">Space to flip · ← → to navigate</span>
         </p>
         <div className="review-nav-buttons">
           <button

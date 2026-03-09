@@ -558,6 +558,11 @@ body {
   color: var(--text-primary);
 }
 
+.keyboard-hint {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
 /* Review Navigation Buttons */
 .review-nav-buttons {
   display: flex;
