@@ -20,6 +20,8 @@ function ReviewPage() {
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
 
   useEffect(() => {
+    setCurrentCardIndex(0);
+    setIsFlipped(false);
     loadDeck();
   }, [id, starredOnly]);
 

@@ -188,7 +188,7 @@ function DeckPage() {
           type="button"
           className={`btn btn-small ${starredFilter ? 'btn-star' : 'btn-secondary'}`}
           onClick={() => setStarredFilter(!starredFilter)}
-          disabled={starredCount === 0}
+          disabled={starredCount === 0 && !starredFilter}
         >
           {starredFilter ? `Starred (${starredCount})` : `Show Starred (${starredCount})`}
         </button>
