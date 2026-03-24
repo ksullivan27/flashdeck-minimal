@@ -492,6 +492,17 @@ body {
   background: linear-gradient(135deg, var(--bg-primary) 0%, #dcfce7 100%);
 }
 
+/* Disable pointer events on the hidden face to prevent mirrored click targets */
+.flashcard .flashcard-back {
+  pointer-events: none;
+}
+.flashcard.flipped .flashcard-front {
+  pointer-events: none;
+}
+.flashcard.flipped .flashcard-back {
+  pointer-events: auto;
+}
+
 /* Star button on flashcard */
 .flashcard-star-btn {
   position: absolute;
